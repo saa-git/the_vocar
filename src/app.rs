@@ -35,7 +35,7 @@ impl eframe::App for VocarApp {
         eframe::set_value(storage, eframe::APP_KEY, self);
     }
 
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         let Self { demo, screen } = self;
 
         #[cfg(not(target_arch = "wasm32"))]
@@ -44,11 +44,13 @@ impl eframe::App for VocarApp {
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Quit").clicked() {
-                        _frame.close();
+                        frame.close();
                     }
                 });
             });
         });
+
+        println!("{:?}", frame.info().window_info.size);
 
 
         match screen {

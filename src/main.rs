@@ -8,7 +8,7 @@ fn main() -> eframe::Result<()> {
 
     tracing_subscriber::fmt::init();
 
-    let icon = image::open("apple-touch-icon.png").expect("Failed to open icon path").to_rgba8();
+    let icon = image::open("./assets/icons/apple-touch-icon.png").expect("Failed to open icon path").to_rgba8();
     let (icon_width, icon_height) = icon.dimensions();
     
     let options = eframe::NativeOptions {
@@ -17,7 +17,7 @@ fn main() -> eframe::Result<()> {
             width: icon_width,
             height: icon_height,
         }),
-        initial_window_size: Some(Vec2 { x: 400.0, y: 300.0 }),
+        initial_window_size: Some(Vec2 { x: 600.0, y: 400.0 }),
         resizable: false,
         hardware_acceleration: eframe::HardwareAcceleration::Preferred,
         follow_system_theme: true,
