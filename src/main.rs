@@ -17,7 +17,7 @@ fn main() -> eframe::Result<()> {
             width: icon_width,
             height: icon_height,
         }),
-        initial_window_size: Some(Vec2 { x: 600.0, y: 400.0 }),
+        initial_window_size: Some(Vec2 { x: 1000.0, y: 400.0 }),
         resizable: false,
         hardware_acceleration: eframe::HardwareAcceleration::Preferred,
         follow_system_theme: true,

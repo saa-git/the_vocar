@@ -50,8 +50,7 @@ impl eframe::App for VocarApp {
             });
         });
 
-        println!("{:?}", frame.info().window_info.size);
-
+        // println!("{:?}", frame.info().window_info.size);
 
         match screen {
             Screen::StartMenu => {
