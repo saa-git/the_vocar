@@ -69,7 +69,7 @@ impl eframe::App for VocarApp {
                 display_starting_class(ctx, demo, screen)
             }
             Screen::Activity => {
-                fact_screen(ctx, demo, screen)
+                fact_screen(ctx, demo, frame)
             }
         }   
     }
@@ -78,9 +78,11 @@ impl eframe::App for VocarApp {
 fn start_menu(ctx: &egui::Context, screen: &mut Screen) {
     egui::CentralPanel::default().show(ctx, |ui| {
         ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
-            ui.heading("Vocar");
+            ui.add_space(180.0);
+            ui.heading("The Vocar");
             ui.label("Welcome to the Vocar! This is an activity that guests participated in at the Bob Moses Conference 2023.");
-            if ui.button("Start").clicked() {
+            ui.add_space(20.0);
+            if ui.button("Begin Your Journey!").on_hover_text("Clic").clicked() {
                 *screen = Screen::GetRace;
             }
         });
@@ -94,9 +96,11 @@ fn start_menu(ctx: &egui::Context, screen: &mut Screen) {
 fn get_race(ctx: &egui::Context, demo: &mut demo::Demo, screen: &mut Screen) {
     egui::CentralPanel::default().show(ctx, |ui| {
         ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
+            ui.add_space(180.0);
             ui.heading("Getting A Race");
             ui.label("For this experience, you will be given a random race.");
-            if ui.button("Get My Race!").clicked() {
+            ui.add_space(20.0);
+            if ui.button("Get My Race!").on_hover_text("Click to go to the next screen.").clicked() {
                 demo.race = random();
                 *screen = Screen::RaceScreen;
             }
@@ -107,8 +111,11 @@ fn get_race(ctx: &egui::Context, demo: &mut demo::Demo, screen: &mut Screen) {
 fn display_race(ctx: &egui::Context, demo: &mut demo::Demo, screen: &mut Screen) {
     egui::CentralPanel::default().show(ctx, |ui| {
         ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
+            ui.add_space(180.0);
             ui.heading(&format!("You are {} :).", demo.race));
-            if ui.button("Next").clicked() {
+            ui.label("This will be your race PERMANENTLY.");
+            ui.add_space(20.0);
+            if ui.button("Next!").on_hover_text("Click to go to the next screen.").clicked() {
                 *screen = Screen::GetStartingClass;
             }
         });
@@ -118,9 +125,15 @@ fn display_race(ctx: &egui::Context, demo: &mut demo::Demo, screen: &mut Screen)
 fn get_starting_class(ctx: &egui::Context, demo: &mut demo::Demo, screen: &mut Screen) {
     egui::CentralPanel::default().show(ctx, |ui| {
         ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
+            ui.add_space(180.0);
+
             ui.heading("Getting Your Starting Quintile");
+
             ui.label("For this experience, you will also be given a random starting quintile.");
-            if ui.button("Get My Starting Quintile!").clicked() {
+
+            ui.add_space(20.0);
+
+            if ui.button("Get My Starting Quintile!").on_hover_text("Click to go to the next screen.").clicked() {
                 demo.class_zero = random();
                 demo.class_n = demo.class_zero;
                 *screen = Screen::StartingClassScreen;
@@ -132,88 +145,96 @@ fn get_starting_class(ctx: &egui::Context, demo: &mut demo::Demo, screen: &mut S
 fn display_starting_class(ctx: &egui::Context, demo: &mut demo::Demo, screen: &mut Screen) {
     egui::CentralPanel::default().show(ctx, |ui| {
         ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
-            ui.heading(&format!("You are in the {} :).", demo.class_zero));
-            if ui.button("Next").clicked() {
+            ui.add_space(170.0);
+
+            ui.heading(&format!("You are in the {}.", demo.class_zero));
+
+            ui.add_space(10.0);
+
+            ui.label("This starting Quintile is just a jumpoff point and may change for each subsequent generation.");
+
+            ui.label("The chance to get a higher, equal or lower Quintile is not same.");
+
+            ui.add_space(20.0);
+
+            if ui.button("Next").on_hover_text("Click to go to the next screen.").clicked() {
+                demo.class_zero = random();
+
+                demo.class_n = demo.class_zero;
+
                 *screen = Screen::Activity;
             }
         });
     });
 }
 
-fn fact_screen(ctx: &egui::Context, demo: &mut demo::Demo, _screen: &mut Screen) {
-    egui::SidePanel::left("card_panel").show(ctx, |ui| {
+fn fact_screen(ctx: &egui::Context, demo: &mut demo::Demo, frame: &mut eframe::Frame) {
+    let width = (frame.info().window_info.size.x)/5.0;
+
+    egui::SidePanel::left("card_panel").resizable(true).default_width(width).show(ctx, |ui| {
+        ui.separator();
         ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
+
             ui.heading("Your Vocar Card");
         });
 
         ui.separator();
-
+        ui.add_space(5.0);
         ui.horizontal(|ui| {
             ui.label("Race: ");
+
             ui.text_edit_singleline(&mut demo.race.to_string());
         });
-
         ui.add_space(10.0);
+        ui.horizontal(|ui| {
+            ui.label("Current Class: ");
 
+            ui.text_edit_singleline(&mut demo.class_n.to_string());
+        });
+        ui.add_space(5.0);
+
+        ui.separator();
+        ui.add_space(5.0);
         ui.horizontal(|ui| {
             ui.label("Starting Class: ");
+
             ui.text_edit_singleline( &mut demo.class_zero.to_string());
         });
-
-        ui.horizontal(|ui| {
-            ui.label("Current Class: ");
-            ui.text_edit_singleline(&mut demo.class_n.to_string());
-        });
-        
+        ui.add_space(10.0);
         ui.horizontal(|ui| {
             ui.label("Final Class: ");
+
             ui.text_edit_singleline(&mut demo.class_five.to_string());
         });
+        ui.add_space(5.0);
 
         ui.separator();
-
-        ui.horizontal(|ui| {
-            ui.label("Current Class: ");
-            ui.text_edit_singleline(&mut demo.class_n.to_string());
-        });
-
-        ui.separator();
-
+        ui.add_space(5.0);
         for (i, class) in demo.history.iter().enumerate() {
             ui.horizontal(|ui| {
                 let text: &str = &format!("Generation {}: ", i + 1);
+
                 ui.label(text);
+
                 ui.text_edit_singleline(&mut class.to_string());
             });
 
             ui.add_space(10.0)
         }
-
         if ui.button("Add Gen").clicked() {
             if demo.history.len() < 5 {
                 demo.history.push(random());
+
                 demo.class_n = demo.history[demo.history.len() - 1];
 
                 if demo.history.len() == 5 {
+
                     demo.class_five = demo.history[4];
                 }
             }
             
         }
-
-        /*ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-            ui.horizontal(|ui| {
-                ui.spacing_mut().item_spacing.x = 0.0;
-                ui.label("powered by ");
-                ui.hyperlink_to("egui", "https://github.com/emilk/egui");
-                ui.label(" and ");
-                ui.hyperlink_to(
-                    "eframe",
-                    "https://github.com/emilk/egui/tree/master/crates/eframe",
-                );
-                ui.label(".");
-            });
-        });*/
+        ui.add_space(5.0);
     });
 
     egui::CentralPanel::default().show(ctx, |ui| {

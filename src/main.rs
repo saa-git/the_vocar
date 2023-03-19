@@ -3,25 +3,22 @@
 
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result<()> {
-    use eframe::IconData;
-    use egui::Vec2;
-
     tracing_subscriber::fmt::init();
 
-    let icon = image::open("./assets/icons/apple-touch-icon.png").expect("Failed to open icon path").to_rgba8();
+    let icon = image::open("./assets/icons/apple-touch-icon.png").expect("Failed To Open Icon Path").to_rgba8();
     let (icon_width, icon_height) = icon.dimensions();
     
     let options = eframe::NativeOptions {
-        icon_data: Some(IconData {
+        icon_data: Some(eframe::IconData {
             rgba: icon.into_raw(),
             width: icon_width,
             height: icon_height,
         }),
-        initial_window_size: Some(Vec2 { x: 1000.0, y: 400.0 }),
+        initial_window_size: Some(egui::Vec2 { x: 600.0, y: 300.0 }),
         resizable: false,
         hardware_acceleration: eframe::HardwareAcceleration::Preferred,
         follow_system_theme: true,
-        centered: false,
+        centered: true,
         ..Default::default()
     };
 
