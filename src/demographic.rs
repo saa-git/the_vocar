@@ -1,8 +1,8 @@
 use std::fmt::Display;
 
 use {
-    Class::*,
-    Race::*
+    Class::{Incarcerated, Quintile},
+    Race::{Black, White}
 };
 
 use rand::{
@@ -16,10 +16,8 @@ use rand::{
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Default, Clone, Copy, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub enum Class {
-    #[default]
-    UnsetC,
     Quintile(i8),
     Incarcerated,
 }
@@ -27,7 +25,6 @@ pub enum Class {
 impl Display for Class {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Class::UnsetC => write!(f, ""),
             Class::Quintile(x) => match x {
                 1 => write!(f, "1st Quintile"),
                 2 => write!(f, "2nd Quintile"),
@@ -53,10 +50,8 @@ impl Distribution<Class> for Standard {
     }
 }
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
 pub enum Race{
-    #[default]
-    UnsetR,
     Black,
     White,
 }
@@ -64,7 +59,6 @@ pub enum Race{
 impl Display for Race {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Race::UnsetR => write!(f, ""),
             Race::Black => write!(f, "Black"),
             Race::White => write!(f, "White"),
         }
@@ -84,20 +78,22 @@ impl Distribution<Race> for Standard {
 ///
 /// # Example
 /// ```
+/// use vocar::Demo;
+/// 
 /// let rand_demo = Demo::new();
 /// ```
 #[derive(Debug, Default, Clone, Deserialize, Serialize)]
 pub struct Demo {
     /// Holds the initial [Class] used to transition.
-    pub class_zero: Class,
+    pub class_zero: Option<Class>,
     /// Holds the current generation's [Class].
-    pub class_n: Class,
+    pub class_n: Option<Class>,
     /// Holds the 5th and final [Class] that was transitioned to.
-    pub class_five: Class,
+    pub class_five: Option<Class>,
     /// Holds the [Class]es of previous generations.
     pub history: Vec<Class>,
     /// Holds [Race] which controls the likelihoods of transition to any [Class].
-    pub race: Race,
+    pub race: Option<Race>,
 }
 
 impl Display for Demo {
@@ -105,20 +101,42 @@ impl Display for Demo {
     /// Formatted to "`Race`: `Class`"
     /// # Example
     /// ```
+    /// use vocar::{
+    ///     Demo
+    /// };
+    /// 
+    /// use rand::random();
+    /// 
     /// let rand_class_black = Demo { random(), Vec::<Class>::new(), Race::Black };
     ///
     /// println!("{rand_class_black}");
     /// 
-    /// [Output]: "Black: 3rd Quintile"
+    /// // [Output]: "Black: 3rd Quintile"
     /// ```
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}: {}", self.race, self.class_n)
+        // write!(f, "{}: {}", self.race, self.class_n);
+        match self.race {
+            Some(race) => {
+                match self.class_n {
+                    Some(class) => {
+                        write!(f, "{race}: {class}")
+                    },
+                    None => {
+                        write!(f, "{race}: ?")
+                    }
+                }
+            },
+            None => {
+                write!(f, "Empty Demographic")
+            }
+        }
     }
 }
 
 impl Demo {
+    #[must_use]
     pub fn new() -> Self {
-        Demo { class_zero: UnsetC, class_n: UnsetC, class_five: UnsetC, history: Vec::<Class>::new(), race: UnsetR }
+        Demo { class_zero: None, class_n: None, class_five: None, history: Vec::<Class>::new(), race: None }
     }
 
     const BLACK_WEIGHTS: [[f64; 6]; 5] = [
@@ -144,7 +162,7 @@ impl Demo {
 
         match previous_class {
             Quintile(mut x) => {
-                if self.race == Black {
+                if self.race == Some(Black) {
                     x -= 2;
                 } else {
                     x -= 1;
@@ -152,68 +170,65 @@ impl Demo {
 
                 let x = x.clamp(1, 5);
 
-                self.history.push(self.class_n);
-                self.class_n = Quintile(x);
+                self.history.push(self.class_n.unwrap());
+                self.class_n = Some(Quintile(x));
             }
-            UnsetC => panic!("Err:[{self}] Previous State is Unset"),
             Incarcerated => panic!("Err:[{self}] Previous State is Incarceration"),
         }
     }
 
     /// Use Weighted Index Distribution to get a random new Class from the current [Class] and [Race].
     fn new_class(&mut self) {
-        match self.race {
-            UnsetR => {
-                self.race = random();
-                self.new_class();
-            },
-            _ => {
-                let class_weights = match self.class_n {
-                    UnsetC => random(),
-                    Quintile(x) => match self.race {
-                        UnsetR => panic!("Err:[{self}] Tried To Get A New Quintile Without Have A Race"),
-                        Black => {
-                            let x: usize = (x - 1).try_into().unwrap();
-                            Self::BLACK_WEIGHTS[x]
-                        }
-                        White => {
-                            let x: usize = (x - 1).try_into().unwrap();
-                            Self::WHITE_WEIGHTS[x]
-                        }
-                    },
-                    Incarcerated => {
-                        panic!("Err:[{self} Incarcerated Demos Should Never Reach This Function")
+        if self.race.is_none() {
+            self.race = random();
+            self.new_class();
+        } else {
+            let weights = match self.class_n.unwrap() {
+                Quintile(x) => match self.race.unwrap() {
+                    Black => {
+                        let x: usize = (x - 1).try_into().unwrap();
+                        Self::BLACK_WEIGHTS[x]
                     }
-                };
+                    White => {
+                        let x: usize = (x - 1).try_into().unwrap();
+                        Self::WHITE_WEIGHTS[x]
+                    }
+                },
+                Incarcerated => {
+                    panic!("Err:[{self} Incarcerated Demos Should Never Reach This Function")
+                }
+            };
 
-                let items = [
-                    (Quintile(1), class_weights[0]),
-                    (Quintile(2), class_weights[1]),
-                    (Quintile(3), class_weights[2]),
-                    (Quintile(4), class_weights[3]),
-                    (Quintile(5), class_weights[4]),
-                    (Incarcerated, class_weights[5]),
-                ];
+            let items = [
+                (Quintile(1), weights[0]),
+                (Quintile(2), weights[1]),
+                (Quintile(3), weights[2]),
+                (Quintile(4), weights[3]),
+                (Quintile(5), weights[4]),
+                (Incarcerated, weights[5]),
+            ];
 
-                let dist = WeightedIndex::new(items.iter().map(|item| item.1)).unwrap();
+            let dist = WeightedIndex::new(items.iter().map(|item| item.1)).unwrap();
 
-                let new_class: Class = items[dist.sample(&mut thread_rng())].0;
+            let new_class: Class = items[dist.sample(&mut thread_rng())].0;
 
-                self.history.push(new_class);
-                self.class_n = new_class;
-            }
+            self.history.push(new_class);
+            self.class_n = Some(new_class);
         }
     }
 
     pub fn next_gen(&mut self) {
         match self.class_n {
-            Incarcerated => self.leave_incarceration(),
-            _ => self.new_class(),
+            Some(Quintile(_)) => self.new_class(),
+            Some(Incarcerated) => self.leave_incarceration(),
+            None => {}
         }
     }
 
-    pub fn destucture(&self) -> (&Class, &Class, &Class, &Vec<Class>, &Race) {
-        let Self {class_zero, class_n, class_five, history, race} = self;
-        (class_zero, class_n, class_five, history, race)
+    pub fn reset(&mut self) {
+        self.class_zero = None;
+        self.class_n = None;
+        self.class_five = None;
+        self.history.clear();
     }
 }
