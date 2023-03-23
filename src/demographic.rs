@@ -158,7 +158,7 @@ impl Demo {
     /// Change `Demo.class` containing `Class` variant `Incarcerated` to last `Class` in `Demo.2`.
     /// `Demo.2` is a `Vec<Class>`.
     fn leave_incarceration(&mut self) {
-        let previous_class = self.history[self.history.len() - 1];
+        let previous_class = self.history[self.history.len() - 2];
 
         match previous_class {
             Quintile(mut x) => {
@@ -183,6 +183,7 @@ impl Demo {
             self.race = random();
             self.new_class();
         } else {
+            
             let weights = match self.class_n.unwrap() {
                 Quintile(x) => match self.race.unwrap() {
                     Black => {
@@ -218,10 +219,10 @@ impl Demo {
     }
 
     pub fn next_gen(&mut self) {
-        match self.class_n {
-            Some(Quintile(_)) => self.new_class(),
-            Some(Incarcerated) => self.leave_incarceration(),
-            None => {}
+        dbg!(&self.class_n.unwrap());
+        match self.class_n.unwrap() {
+            Quintile(_) => self.new_class(),
+            Incarcerated => self.leave_incarceration(),
         }
     }
 
